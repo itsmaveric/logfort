@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Monitor Status - REFLIV Tracking System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-folder-open"></i> Folder Monitor Status</h1>
+            <div class="btn-group">
+                {% if is_running %}
+                    <form method="POST" action="{{ url_for('stop_monitor_service') }}" class="d-inline">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-stop"></i> Stop Monitor
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="POST" action="{{ url_for('start_monitor_service') }}" class="d-inline">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-play"></i> Start Monitor
+                        </button>
+                    </form>
+                {% endif %}
+                <a href="{{ url_for('monitor_settings') }}" class="btn btn-primary">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </div>
+        </div>
+
+        <!-- Monitor Instance Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-server"></i> Monitor Service Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Status:</strong> 
+                            {% if is_running %}
+                                <span class="badge bg-success">Running</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Stopped</span>
+                            {% endif %}
+                        </p>
+                        {% if monitor_instance %}
+                            <p><strong>Last Heartbeat:</strong> 
+                                {{ monitor_instance.heartbeat_at.strftime('%Y-%m-%d %H:%M:%S') if monitor_instance.heartbeat_at else 'Never' }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if monitor_instance and monitor_instance.started_at %}
+                            <p><strong>Started At:</strong> 
+                                {{ monitor_instance.started_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </p>
+                        {% endif %}
+                        <p><strong>Monitored Folders:</strong> {{ folder_data|length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitored Folders -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-folder"></i> Monitored Folders</h5>
+            </div>
+            <div class="card-body">
+                {% if folder_data %}
+                    {% for data in folder_data %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-2">
+                                    <i class="fas fa-folder-open"></i> {{ data.folder.path }}
+                                    {% if data.folder.active %}
+                                        <span class="badge bg-success ms-2">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary ms-2">Inactive</span>
+                                    {% endif %}
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <strong>Include:</strong> {{ data.folder.include_patterns }}<br>
+                                            {% if data.folder.exclude_patterns %}
+                                                <strong>Exclude:</strong> {{ data.folder.exclude_patterns }}<br>
+                                            {% endif %}
+                                            <strong>Polling:</strong> {{ data.folder.polling_interval }}s
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <strong>Max Files:</strong> {{ data.folder.max_files }}<br>
+                                            <strong>Files Tracked:</strong> {{ data.file_count }}<br>
+                                            <strong>Last Run:</strong> {{ data.folder.last_run_at.strftime('%H:%M:%S') if data.folder.last_run_at else 'Never' }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <form method="POST" action="{{ url_for('delete_monitored_folder', folder_id=data.folder.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                        onclick="return confirm('Remove this folder from monitoring?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- File States -->
+                        {% if data.file_states %}
+                        <div class="mt-3">
+                            <h6>Tracked Files:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>File</th>
+                                            <th>Size</th>
+                                            <th>Offset</th>
+                                            <th>Records</th>
+                                            <th>Last Seen</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for state in data.file_states %}
+                                        <tr>
+                                            <td>
+                                                <small>{{ state.path.split('/')[-1] }}</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ "%.1f"|format(state.last_size / 1024 / 1024) }} MB</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ "%.1f"|format(state.last_offset / 1024 / 1024) }} MB</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ state.records_processed }}</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ state.last_seen.strftime('%H:%M:%S') if state.last_seen else 'Never' }}</small>
+                                            </td>
+                                            <td>
+                                                {% if state.last_error %}
+                                                    <span class="badge bg-danger" title="{{ state.last_error }}">Error</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">OK</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-folder-plus fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No folders configured for monitoring</p>
+                        <a href="{{ url_for('monitor_settings') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Folder
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-info-circle"></i> About Folder Monitoring</h6>
+            </div>
+            <div class="card-body">
+                <p><small>The folder monitor automatically processes REFLIV log files as they're updated. Key features:</small></p>
+                <ul class="small">
+                    <li>Continuous monitoring of specified folders</li>
+                    <li>Incremental file processing (only reads new content)</li>
+                    <li>Automatic file rotation (max 10 files)</li>
+                    <li>Configurable polling intervals</li>
+                    <li>Pattern-based file filtering</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Configuration Tips:</h6>
+                <ul class="small">
+                    <li>Use <code>*.txt,*.log</code> for include patterns</li>
+                    <li>Set polling interval based on file update frequency</li>
+                    <li>Monitor will automatically start with active folders</li>
+                    <li>Files are processed incrementally to avoid duplicates</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

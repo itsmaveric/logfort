@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - REFLIV Tracking System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </h1>
+        <p class="lead">Monitor your REFLIV package tracking system</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-hashtag fa-2x text-primary mb-3"></i>
+                <h5 class="card-title">Total References</h5>
+                <h2 class="text-primary">{{ stats.total_references }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-list fa-2x text-success mb-3"></i>
+                <h5 class="card-title">Total Records</h5>
+                <h2 class="text-success">{{ stats.total_records }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-2x text-info mb-3"></i>
+                <h5 class="card-title">Processed Files</h5>
+                <h2 class="text-info">{{ stats.total_files }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-rocket"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('upload_file') }}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload New Log File
+                    </a>
+                    <a href="{{ url_for('tracking') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-search"></i> Search Tracking Records
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> System Information</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Supported File Types:</strong> .txt, .log</p>
+                <p class="mb-1"><strong>Max File Size:</strong> 16 MB</p>
+                <p class="mb-0"><strong>Reference Format:</strong> A + 10 digits (e.g., A0000410423)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Records -->
+{% if recent_records %}
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock"></i> Recent Tracking Updates</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Status</th>
+                                <th>Timestamp</th>
+                                <th>Shipping Unit</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in recent_records %}
+                            <tr>
+                                <td>
+                                    <code>{{ record.reference_number }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if record.status == 'ANNOUNCED' %}info{% elif record.status == 'DELIVERED' %}success{% elif record.status == 'IN_TRANSIT' %}warning{% else %}secondary{% endif %}">
+                                        {{ record.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ record.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    {% if record.shipping_unit_ref %}
+                                        <small class="text-muted">{{ record.shipping_unit_ref }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('reference_detail', reference_number=record.reference_number) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('tracking') }}" class="btn btn-outline-secondary">
+                        View All Records <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5>No tracking records yet</h5>
+                <p class="text-muted">Upload your first log file to start tracking packages</p>
+                <a href="{{ url_for('upload_file') }}" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Upload Log File
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

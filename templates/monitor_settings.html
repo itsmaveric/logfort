@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Monitor Settings - REFLIV Tracking System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-cog"></i> Monitor Settings</h1>
+            <a href="{{ url_for('monitor_status') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Status
+            </a>
+        </div>
+
+        <!-- Add/Update Folder Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-folder-plus"></i> Add/Update Monitored Folder</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="folder_path" class="form-label">Folder Path *</label>
+                                <input type="text" class="form-control" id="folder_path" name="folder_path" 
+                                       placeholder="/tmp/logs or C:\Users\YourName\Desktop\logs" required>
+                                <div class="form-text">
+                                    Full path to the folder containing REFLIV log files.<br>
+                                    <span id="security-hint" class="text-warning"><i class="fas fa-shield-alt"></i> Security mode will be set based on folder location</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="access_mode" class="form-label">Access Mode</label>
+                                <select class="form-select" id="access_mode" name="access_mode" required>
+                                    <option value="safe">Safe (temp/working directories only)</option>
+                                    <option value="home_desktop">Desktop Access (allows local desktop folders)</option>
+                                    <option value="unrestricted">⚠️ Unrestricted (any folder - use with caution)</option>
+                                </select>
+                                <div class="form-text">
+                                    <strong>Safe:</strong> Only allows /tmp and current working directory<br>
+                                    <strong>Desktop:</strong> Allows your home Desktop folder for local monitoring<br>
+                                    <strong>⚠️ Unrestricted:</strong> Dangerous - allows any system folder
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="exclude_patterns" class="form-label">Exclude Patterns</label>
+                                <input type="text" class="form-control" id="exclude_patterns" name="exclude_patterns" 
+                                       placeholder="*.bak,*temp*">
+                                <div class="form-text">Comma-separated file patterns to exclude (optional)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="polling_interval" class="form-label">Polling Interval (seconds)</label>
+                                <input type="number" class="form-control" id="polling_interval" name="polling_interval" 
+                                       value="10" min="1" max="300">
+                                <div class="form-text">How often to check for file changes</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="max_files" class="form-label">Maximum Files</label>
+                                <input type="number" class="form-control" id="max_files" name="max_files" 
+                                       value="10" min="1" max="50">
+                                <div class="form-text">Maximum number of files to monitor</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3 d-flex align-items-center" style="margin-top: 2rem;">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="active" name="active" checked>
+                                    <label class="form-check-label" for="active">
+                                        <strong>Active</strong>
+                                    </label>
+                                    <div class="form-text">Enable monitoring for this folder</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rotation and Scheduling Settings -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rotation_base" class="form-label">Rotation Base File</label>
+                                <input type="text" class="form-control" id="rotation_base" name="rotation_base" 
+                                       placeholder="log_tracktrace.log">
+                                <div class="form-text">Base filename for rotation (e.g., log_tracktrace.log). Leave empty to use include patterns.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rotation_max" class="form-label">Max Rotation Files</label>
+                                <input type="number" class="form-control" id="rotation_max" name="rotation_max" 
+                                       value="10" min="1" max="50">
+                                <div class="form-text">Maximum rotation files to monitor (.1, .2, ..., .N)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3 d-flex align-items-center" style="margin-top: 1rem;">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="schedule_enabled" name="schedule_enabled">
+                                    <label class="form-check-label" for="schedule_enabled">
+                                        <strong>Scheduled Monitoring</strong>
+                                    </label>
+                                    <div class="form-text">Enable scheduled monitoring instead of continuous</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="schedule_every_minutes" class="form-label">Schedule Interval (minutes)</label>
+                                <input type="number" class="form-control" id="schedule_every_minutes" name="schedule_every_minutes" 
+                                       value="120" min="1" max="1440">
+                                <div class="form-text">How often to run monitoring (120 = 2 hours)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Configuration
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Current Folders -->
+        {% if folders %}
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list"></i> Current Monitored Folders</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Folder Path</th>
+                                <th>Include Patterns</th>
+                                <th>Polling</th>
+                                <th>Max Files</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for folder in folders %}
+                            <tr>
+                                <td>
+                                    <code>{{ folder.path }}</code>
+                                </td>
+                                <td>
+                                    <small>{{ folder.include_patterns }}</small>
+                                    {% if folder.exclude_patterns %}
+                                        <br><small class="text-muted">Exclude: {{ folder.exclude_patterns }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ folder.polling_interval }}s</td>
+                                <td>{{ folder.max_files }}</td>
+                                <td>
+                                    {% if folder.active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="loadFolderData('{{ folder.path }}', '{{ folder.include_patterns }}', '{{ folder.exclude_patterns or '' }}', {{ folder.polling_interval }}, {{ folder.max_files }}, {{ folder.active|lower }})">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <form method="POST" action="{{ url_for('delete_monitored_folder', folder_id=folder.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                onclick="return confirm('Remove folder from monitoring?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-lightbulb"></i> Configuration Guide</h6>
+            </div>
+            <div class="card-body">
+                <h6>Folder Path:</h6>
+                <p class="small">Enter the full path to the folder containing your REFLIV log files. The monitor will check this folder for files matching your patterns.</p>
+                
+                <h6>Include Patterns:</h6>
+                <p class="small">Use glob patterns to specify which files to monitor:</p>
+                <ul class="small">
+                    <li><code>*.txt</code> - All .txt files</li>
+                    <li><code>*.log</code> - All .log files</li>
+                    <li><code>refliv_*.txt</code> - Files starting with "refliv_"</li>
+                </ul>
+                
+                <h6>Exclude Patterns:</h6>
+                <p class="small">Optional patterns to exclude certain files:</p>
+                <ul class="small">
+                    <li><code>*.bak</code> - Exclude backup files</li>
+                    <li><code>*temp*</code> - Exclude files with "temp" in name</li>
+                </ul>
+                
+                <h6>Polling Interval:</h6>
+                <p class="small">How often (in seconds) to check for file changes. Lower values provide faster processing but use more resources.</p>
+                
+                <h6>Maximum Files:</h6>
+                <p class="small">The monitor will track the newest N files and ignore/archive older ones. This prevents unlimited growth.</p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-exclamation-triangle"></i> Important Notes</h6>
+            </div>
+            <div class="card-body">
+                <ul class="small">
+                    <li>The folder path must exist and be readable</li>
+                    <li>Files are processed incrementally - only new content is parsed</li>
+                    <li>The monitor automatically handles file rotation</li>
+                    <li>Only one monitor instance can run at a time</li>
+                    <li>Changes take effect immediately when the monitor is running</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadFolderData(path, includePatterns, excludePatterns, pollingInterval, maxFiles, active) {
+    document.getElementById('folder_path').value = path;
+    document.getElementById('include_patterns').value = includePatterns;
+    document.getElementById('exclude_patterns').value = excludePatterns;
+    document.getElementById('polling_interval').value = pollingInterval;
+    document.getElementById('max_files').value = maxFiles;
+    document.getElementById('active').checked = active;
+    
+    // Scroll to form
+    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

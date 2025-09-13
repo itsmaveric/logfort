@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Track Packages - REFLIV Tracking System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6">
+            <i class="fas fa-search"></i> Track Packages
+        </h1>
+        <p class="lead">Search and filter tracking records</p>
+    </div>
+</div>
+
+<!-- Search Form -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="reference" class="form-label">Reference Number</label>
+                        <input type="text" class="form-control" id="reference" name="reference" 
+                               value="{{ search_ref }}" placeholder="e.g., A0000410423">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Statuses</option>
+                            {% for status in statuses %}
+                            <option value="{{ status }}" {% if status == search_status %}selected{% endif %}>
+                                {{ status }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="btn-group w-100">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <a href="{{ url_for('tracking') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results -->
+{% if records.items %}
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Tracking Records 
+                    <span class="badge bg-secondary">{{ records.total }}</span>
+                </h5>
+                
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-secondary" onclick="toggleTableView()">
+                        <i class="fas fa-table"></i> Toggle View
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="trackingTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Reference</th>
+                                <th>Status</th>
+                                <th>Description</th>
+                                <th>Timestamp</th>
+                                <th>Shipping Unit</th>
+                                <th>Location</th>
+                                <th>Log File</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in records.items %}
+                            <tr>
+                                <td>
+                                    <code class="text-primary">{{ record.reference_number }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if record.status == 'ANNOUNCED' %}info{% elif record.status == 'DELIVERED' %}success{% elif record.status == 'IN_TRANSIT' %}warning{% elif record.status == 'LABEL_PRINTED' %}secondary{% else %}primary{% endif %}">
+                                        {{ record.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if record.description %}
+                                        <small class="text-muted">{{ record.description[:50] }}{% if record.description|length > 50 %}...{% endif %}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                                </td>
+                                <td>
+                                    {% if record.shipping_unit_ref %}
+                                        <small class="text-muted">{{ record.shipping_unit_ref }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.location %}
+                                        <small class="text-muted">{{ record.location }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ record.log_file_name[:20] }}{% if record.log_file_name|length > 20 %}...{% endif %}</small>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('reference_detail', reference_number=record.reference_number) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if records.pages > 1 %}
+                <div class="card-footer">
+                    <nav aria-label="Search results pagination">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if records.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('tracking', page=records.prev_num, reference=search_ref, status=search_status) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in records.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != records.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('tracking', page=page_num, reference=search_ref, status=search_status) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if records.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('tracking', page=records.next_num, reference=search_ref, status=search_status) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            Showing {{ records.per_page * (records.page - 1) + 1 }} to 
+                            {{ records.per_page * (records.page - 1) + records.items|length }} 
+                            of {{ records.total }} records
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5>No tracking records found</h5>
+                {% if search_ref or search_status %}
+                <p class="text-muted">Try adjusting your search criteria</p>
+                <a href="{{ url_for('tracking') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Clear Filters
+                </a>
+                {% else %}
+                <p class="text-muted">Upload log files to start tracking packages</p>
+                <a href="{{ url_for('upload_file') }}" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Upload Log File
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize DataTables for enhanced functionality
+$(document).ready(function() {
+    if ($('#trackingTable tbody tr').length > 0) {
+        $('#trackingTable').DataTable({
+            "paging": false,
+            "info": false,
+            "searching": false,
+            "ordering": true,
+            "columnDefs": [
+                { "orderable": false, "targets": [7] } // Actions column
+            ],
+            "order": [[ 3, "desc" ]], // Sort by timestamp desc
+            "responsive": true
+        });
+    }
+});
+
+function toggleTableView() {
+    const table = document.getElementById('trackingTable');
+    table.classList.toggle('table-sm');
+}
+</script>
+{% endblock %}

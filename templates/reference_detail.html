@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Reference {{ reference_number }} - REFLIV Tracking System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6">
+            <i class="fas fa-package"></i> Reference Details
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('tracking') }}">Tracking</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ reference_number }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Reference Summary -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-hashtag"></i> Reference: <code class="text-primary">{{ reference_number }}</code>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Total Shipping Units:</strong> {{ shipping_units|length }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Total Status Records:</strong> 
+                        {% set total_records = [] %}
+                        {% for unit_key, records in shipping_units.items() %}
+                            {% set _ = total_records.extend(records) %}
+                        {% endfor %}
+                        {{ total_records|length }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Latest Update:</strong>
+                        {% if total_records %}
+                            {{ total_records[0].timestamp.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shipping Units -->
+{% for unit_key, records in shipping_units.items() %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-box"></i>
+                    {% if unit_key == 'main' %}
+                        Main Reference
+                    {% else %}
+                        Shipping Unit: <code>{{ unit_key }}</code>
+                    {% endif %}
+                </h5>
+                <span class="badge bg-secondary">{{ records|length }} updates</span>
+            </div>
+            <div class="card-body">
+                <!-- Timeline -->
+                <div class="timeline">
+                    {% for record in records %}
+                    <div class="timeline-item">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-1">
+                                    <span class="badge bg-{% if record.status == 'ANNOUNCED' %}info{% elif record.status == 'DELIVERED' %}success{% elif record.status == 'IN_TRANSIT' %}warning{% elif record.status == 'LABEL_PRINTED' %}secondary{% else %}primary{% endif %}">
+                                        {{ record.status }}
+                                    </span>
+                                </h6>
+                                {% if record.description %}
+                                <p class="mb-1 text-muted">{{ record.description }}</p>
+                                {% endif %}
+                                {% if record.location %}
+                                <p class="mb-0">
+                                    <i class="fas fa-map-marker-alt text-muted"></i>
+                                    <small class="text-muted">{{ record.location }}</small>
+                                </p>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">{{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                                <br>
+                                <small class="text-muted">{{ record.log_file_name[:15] }}...</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Back to Tracking -->
+<div class="row">
+    <div class="col text-center">
+        <a href="{{ url_for('tracking') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Tracking
+        </a>
+    </div>
+</div>
+{% endblock %}

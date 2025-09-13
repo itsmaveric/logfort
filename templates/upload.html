@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Logs - REFLIV Tracking System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6">
+            <i class="fas fa-upload"></i> Upload Log Files
+        </h1>
+        <p class="lead">Upload REFLIV log files to extract tracking information</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-file-upload"></i> File Upload</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select Log File</label>
+                        <input type="file" class="form-control" id="file" name="file" 
+                               accept=".txt,.log" required>
+                        <div class="form-text">
+                            Supported formats: .txt, .log (Max size: 16 MB)
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="uploadBtn">
+                            <i class="fas fa-upload"></i> Upload and Process
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> File Requirements</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        File format: .txt or .log
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Maximum size: 16 MB
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Contains REFLIV tracking data
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        Reference format: A + 10 digits
+                    </li>
+                </ul>
+                
+                <hr>
+                
+                <h6><i class="fas fa-cog"></i> Processing</h6>
+                <small class="text-muted">
+                    The system will automatically:
+                    <ul class="mt-2">
+                        <li>Extract REFLIV reference numbers</li>
+                        <li>Parse XML tracking data</li>
+                        <li>Store status updates with timestamps</li>
+                        <li>Handle duplicate entries</li>
+                    </ul>
+                </small>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-eye"></i> Example Log Entry</h5>
+            </div>
+            <div class="card-body">
+                <pre class="text-muted small mb-0">2025-09-08 10:26:48.955 INFO  TrackTraceMain:64 - [main] Call for REFLIV A0000410423</pre>
+                <hr class="my-2">
+                <small class="text-muted">
+                    Reference number <code>A0000410423</code> would be extracted and tracked.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing indicator -->
+<div class="modal fade" id="processingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Processing Log File</h5>
+                <p class="text-muted mb-0">Please wait while we extract tracking data...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('file');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    if (fileInput.files.length > 0) {
+        // Show processing modal
+        const modal = new bootstrap.Modal(document.getElementById('processingModal'));
+        modal.show();
+        
+        // Disable button
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    }
+});
+
+// File size validation
+document.getElementById('file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const maxSize = 16 * 1024 * 1024; // 16 MB
+        if (file.size > maxSize) {
+            alert('File size exceeds 16 MB limit. Please choose a smaller file.');
+            e.target.value = '';
+        }
+    }
+});
+</script>
+{% endblock %}

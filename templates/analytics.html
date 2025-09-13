@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - REFLIV Tracking System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
+            <div>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <a href="{{ url_for('export_excel') }}?start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-success">
+                    <i class="fas fa-download"></i> Export to Excel
+                </a>
+            </div>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-filter"></i> Date Range Filter</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row align-items-end">
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                        <a href="{{ url_for('analytics') }}" class="btn btn-outline-secondary ms-2">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="card-title">{{ "{:,}".format(total_records) }}</h3>
+                                <p class="card-text">Total Records</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-database fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="card-title">{{ "{:,}".format(unique_references) }}</h3>
+                                <p class="card-text">Unique References</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-hashtag fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="card-title">{{ (total_records / unique_references)|round(1) if unique_references > 0 else 0 }}</h3>
+                                <p class="card-text">Avg Records/Ref</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-calculator fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-warning text-dark h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h3 class="card-title">{{ days_in_range }}</h3>
+                                <p class="card-text">Days in Range</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-calendar fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <!-- Daily Volume Chart -->
+            <div class="col-lg-8">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5><i class="fas fa-line-chart"></i> Daily Tracking Volume</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="dailyVolumeChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status Breakdown -->
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5><i class="fas fa-pie-chart"></i> Status Breakdown</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="statusChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top References and Recent Activity -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list-ol"></i> Top Active References</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Reference</th>
+                                        <th>Records</th>
+                                        <th>Last Update</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ref in top_references %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('reference_detail', reference_number=ref.reference_number) }}" 
+                                               class="text-decoration-none">
+                                                {{ ref.reference_number }}
+                                            </a>
+                                        </td>
+                                        <td><span class="badge bg-primary">{{ ref.count }}</span></td>
+                                        <td class="text-muted small">{{ ref.last_update.strftime('%m/%d %H:%M') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clock"></i> Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Reference</th>
+                                        <th>Status</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in recent_activity %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('reference_detail', reference_number=record.reference_number) }}" 
+                                               class="text-decoration-none">
+                                                {{ record.reference_number }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if record.status == 'Delivered' %}success{% elif 'Transit' in record.status %}warning{% else %}secondary{% endif %}">
+                                                {{ record.status }}
+                                            </span>
+                                        </td>
+                                        <td class="text-muted small">{{ record.created_at.strftime('%m/%d %H:%M') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Daily Volume Chart
+const dailyCtx = document.getElementById('dailyVolumeChart').getContext('2d');
+const dailyVolumeChart = new Chart(dailyCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for day in daily_volume %}'{{ day.date }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Daily Records',
+            data: [{% for day in daily_volume %}{{ day.count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            tension: 0.1,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(255,255,255,0.1)'
+                },
+                ticks: {
+                    color: '#fff'
+                }
+            },
+            x: {
+                grid: {
+                    color: 'rgba(255,255,255,0.1)'
+                },
+                ticks: {
+                    color: '#fff'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#fff'
+                }
+            }
+        }
+    }
+});
+
+// Status Breakdown Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for status in status_data %}'{{ status.status }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for status in status_data %}{{ status.count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#FF6384',
+                '#36A2EB', 
+                '#FFCE56',
+                '#4BC0C0',
+                '#9966FF',
+                '#FF9F40',
+                '#FF6384',
+                '#C9CBCF'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#fff',
+                    padding: 20
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
