@@ -1,0 +1,83 @@
+2025-09-08 10:26:48.955 INFO  TrackTraceMain:64 - [main] Call for REFLIV A0000410423
+2025-09-08 10:26:48.955 INFO  TrackTraceMain:67 - [main] Check token
+2025-09-08 10:26:48.955 INFO  InitConfig:80 - [main] Token expiration 2025-09-08 10:31:328
+2025-09-08 10:26:48.959 INFO  TLSConnection:288 - [main] referenceNumber=000092780
+2025-09-08 10:26:48.959 INFO  TLSConnection:261 - [main] https://iss.epg.com/iss/v1/clients/653607469da9d248c6d58208/tracking/shipment?referenceNumbers=000092780
+2025-09-08 10:26:49.073 INFO  TLSConnection:267 - [main] Status code ::200
+2025-09-08 10:26:49.086 INFO  ResponseHandler:489 - [main] 
+<root>
+    <requestedData>
+        <referenceNumber>92780</referenceNumber>
+        <trackingId/>
+        <stateData>
+            <title>ANNOUNCED</title>
+        </stateData>
+        <shippingUnits>
+            <referenceNumber>598858</referenceNumber>
+            <trackingId/>
+            <trackingUrl/>
+            <stateData>
+                <title>ANNOUNCED</title>
+                <descriptionText>Package is Announced</descriptionText>
+                <timestamp>2025-09-01T14:00:00.448Z</timestamp>
+                <location/>
+            </stateData>
+            <stateDataHistory>
+                <title>ANNOUNCED</title>
+                <descriptionText>Package is Announced</descriptionText>
+                <timestamp>2025-09-01T14:00:00.448Z</timestamp>
+                <location/>
+            </stateDataHistory>
+            <stateDataHistory>
+                <title>LABEL_PRINTED</title>
+                <descriptionText>Label generated from service provider</descriptionText>
+                <timestamp>2025-09-01T13:15:30.300Z</timestamp>
+                <location/>
+            </stateDataHistory>
+            <stateDataHistory>
+                <title>SHU_PREPARED</title>
+                <descriptionText>Package 413301 has been created</descriptionText>
+                <timestamp>2025-09-01T13:15:29.998Z</timestamp>
+                <location/>
+            </stateDataHistory>
+        </shippingUnits>
+        <shippingUnits>
+            <referenceNumber>598959</referenceNumber>
+            <trackingId/>
+            <trackingUrl/>
+            <stateData>
+                <title>ANNOUNCED</title>
+                <descriptionText>Package is Announced</descriptionText>
+                <timestamp>2025-09-01T14:00:00.449Z</timestamp>
+                <location/>
+            </stateData>
+            <stateDataHistory>
+                <title>ANNOUNCED</title>
+                <descriptionText>Package is Announced</descriptionText>
+                <timestamp>2025-09-01T14:00:00.449Z</timestamp>
+                <location/>
+            </stateDataHistory>
+            <stateDataHistory>
+                <title>LABEL_PRINTED</title>
+                <descriptionText>Label generated from service provider</descriptionText>
+                <timestamp>2025-09-01T13:15:40.527Z</timestamp>
+                <location/>
+            </stateDataHistory>
+            <stateDataHistory>
+                <title>SHU_PREPARED</title>
+                <descriptionText>Package 413302 has been created</descriptionText>
+                <timestamp>2025-09-01T13:15:40.266Z</timestamp>
+                <location/>
+            </stateDataHistory>
+        </shippingUnits>
+    </requestedData>
+</root>
+2025-09-08 10:26:49.089 INFO  ResponseHandler:559 - [main] Date from response is 2025-09-01T14:00:00.448Z
+2025-09-08 10:26:49.089 INFO  ResponseHandler:562 - [main] DISPO is 2025-09-01T14:00:00.448Z
+2025-09-08 10:26:49.089 INFO  ResponseHandler:545 - [main] 2025-09-01T14:00:00.448Z past or equal date. No call to M97
+2025-09-08 10:26:49.089 INFO  ResponseHandler:502 - [main] Message to save: ANNOUNCED
+2025-09-08 10:26:49.089 INFO  GetxlDAO:156 - [main] Update  GETXL
+2025-09-08 10:26:49.089 INFO  GetxlDAO:159 - [main] UPDATE FGE50ENPDE.GETXL SET LIBTXL = ?, DISPO = ? WHERE NUMLIV = ? AND SNULIV = ? AND SEQTXL = ? 
+2025-09-08 10:26:49.282 INFO  GetxlDAO:170 - [main] 1 NUMLIV found to update in GELIVE. 1 rows updated. 
+2025-09-08 10:26:49.283 INFO  GetxlDAO:177 - [main] END Update file. File GELIVE
+2025-09-08 10:26:49.299 INFO  TrackTraceMain:90 - [main] -- End process for REFLIV A0000410423
